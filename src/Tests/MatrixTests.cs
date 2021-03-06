@@ -29,6 +29,7 @@ public class MatrixTests
 
     public static IEnumerable<object?[]> DataForIntegration()
     {
+        foreach (var staleIfError in new[] {true, false})
         foreach (var modDate in mods)
         foreach (var expiry in expiries)
         foreach (var etag in etagStrings)
@@ -37,7 +38,8 @@ public class MatrixTests
             yield return new object?[]
             {
                 new StoredData(expiry, modDate, etag),
-                response
+                response,
+                staleIfError
             };
         }
     }
@@ -46,9 +48,10 @@ public class MatrixTests
     [MemberData(nameof(DataForIntegration))]
     public async Task Integration(
         StoredData data,
-        HttpResponseMessageEx response)
+        HttpResponseMessageEx response,
+        bool useStale)
     {
-        var fileName = $"Int_{response}_exp={data.Expiry:yyyyMMdd}_mod={data.Modified:yyyyMMdd}_tag={data.Etag?.Replace('/','_').Replace('"','_')}";
+        var fileName = $"Int_{response}_useStale={useStale}_exp={data.Expiry:yyyyMMdd}_mod={data.Modified:yyyyMMdd}_tag={data.Etag?.Replace('/','_').Replace('"','_')}";
         var settings = new VerifySettings(sharedSettings);
         settings.UseFileName(fileName);
 
@@ -58,7 +61,7 @@ public class MatrixTests
             await using var cache = new HttpCache(directory, new MockHttpClient(response));
             cache.Purge();
             await cache.AddItemAsync("uri", "content", data.Expiry, data.Modified, data.Etag);
-            var result = await cache.DownloadAsync("uri", true);
+            var result = await cache.DownloadAsync("uri", useStale);
             await Verifier.Verify(result, settings);
         }
         catch (HttpRequestException exception)
@@ -111,6 +114,20 @@ public class MatrixTests
 
     static CacheControlHeaderValue[] cacheControls = new CacheControlHeaderValue[]
     {
+        new()
+        {
+            Public = true,
+            MaxAge = TimeSpan.FromDays(1)
+        },
+        new()
+        {
+            Private = true,
+            MaxAge = TimeSpan.FromDays(1)
+        },
+        new()
+        {
+            NoCache = true,
+        },
         new()
         {
             NoStore = true,
