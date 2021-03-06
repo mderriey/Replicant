@@ -18,8 +18,8 @@ public class MatrixTests
     static DateTimeOffset now = new(2000, 1, 1, 0, 0, 0, TimeSpan.Zero);
     static DateTimeOffset inPast = now.AddDays(-1);
     static DateTimeOffset inFuture = now.AddDays(1);
-    static DateTimeOffset?[] expiries = {null, inFuture};
-    static DateTimeOffset?[] mods = {null, now, inPast};
+    static DateTimeOffset?[] expiries = {inFuture};
+    static DateTimeOffset?[] mods = {null};
 
     static MatrixTests()
     {
