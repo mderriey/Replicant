@@ -113,20 +113,6 @@ public class MatrixTests
     {
         new()
         {
-            Public = true,
-            MaxAge = TimeSpan.FromDays(1)
-        },
-        new()
-        {
-            Private = true,
-            MaxAge = TimeSpan.FromDays(1)
-        },
-        new()
-        {
-            NoCache = true,
-        },
-        new()
-        {
             NoStore = true,
         }
     };
