@@ -74,63 +74,8 @@ public class MatrixTests
         }
     }
 
-    [Theory]
-    [MemberData(nameof(StatusForMessageData))]
-    public async Task StatusForMessage(HttpResponseMessageEx response, bool useStale)
-    {
-        var fileName = $"Status_{response}_useStale={useStale}";
-        var settings = new VerifySettings(sharedSettings);
-        settings.UseFileName(fileName);
-
-        try
-        {
-            await Verifier.Verify(response.CacheStatus(useStale), settings);
-        }
-        catch (HttpRequestException exception)
-        {
-            await Verifier.Verify(exception, settings);
-        }
-        finally
-        {
-            response.Dispose();
-        }
-    }
-
-    public static IEnumerable<object[]> StatusForMessageData()
-    {
-        foreach (var staleIfError in new[] {true, false})
-        foreach (var response in Responses())
-        {
-            yield return new object[]
-            {
-                response,
-                staleIfError
-            };
-        }
-    }
-
     static IEnumerable<HttpResponseMessageEx> Responses()
     {
-        yield return new(HttpStatusCode.BadRequest)
-        {
-            Content = new StringContent("")
-        };
-        foreach (var webEtag in etags)
-        foreach (var cacheControl in cacheControls)
-        {
-            HttpResponseMessageEx response = new(HttpStatusCode.NotModified)
-            {
-                Content = new StringContent("")
-            };
-            if (!webEtag.IsEmpty)
-            {
-                response.Headers.TryAddWithoutValidation("ETag", webEtag.ForWeb);
-            }
-
-            response.Headers.CacheControl = cacheControl;
-            yield return response;
-        }
-
         foreach (var webExpiry in expiries)
         {
             foreach (var webMod in mods)
