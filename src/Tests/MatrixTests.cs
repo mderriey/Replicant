@@ -103,7 +103,6 @@ public class MatrixTests
 
     static string?[] etagStrings = new string?[]
     {
-        "\"tag\"",
         "W/\"tag\"",
         null
     };
