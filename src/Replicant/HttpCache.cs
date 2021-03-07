@@ -543,21 +543,21 @@ namespace Replicant
             // if another thread has downloaded in parallel, then use those files
             if (!File.Exists(contentFile))
             {
-                //try
-                //{
+                try
+                {
                     FileEx.Move(tempContentFile, contentFile);
                     FileEx.Move(tempMetaFile, metaFile);
-                //}
-                //catch (Exception exception)
-                //    when (exception is IOException ||
-                //          exception is UnauthorizedAccessException)
-                //{
-                //    if (!File.Exists(contentFile))
-                //    {
-                //        FileEx.Move(tempContentFile, contentFile);
-                //        FileEx.Move(tempMetaFile, metaFile);
-                //    }
-                //}
+                }
+                catch (Exception exception)
+                    when (exception is IOException ||
+                          exception is UnauthorizedAccessException)
+                {
+                    if (!File.Exists(contentFile))
+                    {
+                        FileEx.Move(tempContentFile, contentFile);
+                        FileEx.Move(tempMetaFile, metaFile);
+                    }
+                }
             }
 
             return new(contentFile, status, metaFile);
