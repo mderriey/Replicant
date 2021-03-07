@@ -74,41 +74,6 @@ public class MatrixTests
         }
     }
 
-    [Theory]
-    [MemberData(nameof(StatusForMessageData))]
-    public async Task StatusForMessage(HttpResponseMessageEx response, bool useStale)
-    {
-        var fileName = $"Status_{response}_useStale={useStale}";
-        var settings = new VerifySettings(sharedSettings);
-        settings.UseFileName(fileName);
-
-        try
-        {
-            await Verifier.Verify(response.CacheStatus(useStale), settings);
-        }
-        catch (HttpRequestException exception)
-        {
-            await Verifier.Verify(exception, settings);
-        }
-        finally
-        {
-            response.Dispose();
-        }
-    }
-
-    public static IEnumerable<object[]> StatusForMessageData()
-    {
-        foreach (var staleIfError in new[] {true, false})
-        foreach (var response in Responses())
-        {
-            yield return new object[]
-            {
-                response,
-                staleIfError
-            };
-        }
-    }
-
     static IEnumerable<HttpResponseMessageEx> Responses()
     {
         foreach (var webExpiry in expiries)
