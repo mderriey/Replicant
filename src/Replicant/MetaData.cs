@@ -16,14 +16,6 @@ class MetaData
         List<KeyValuePair<string, List<string>>>? trailingHeaders = null
     )
     {
-        if (!responseHeaders.Any())
-        {
-            throw new();
-        }
-        if (!contentHeaders.Any())
-        {
-            throw new();
-        }
         ResponseHeaders = responseHeaders;
         ContentHeaders = contentHeaders;
         TrailingHeaders = trailingHeaders;
