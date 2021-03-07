@@ -441,7 +441,10 @@ namespace Replicant
         {
             var timestamp = Timestamp.FromResponse(uri, response);
             Task<Stream> ContentFunc(CancellationToken cancellationToken) => response.Content.ReadAsStreamAsync(cancellationToken);
-
+            if (!response.Headers.Any())
+            {
+                throw new();
+            }
             return InnerAddItemAsync(status, token, ContentFunc, response.Headers, response.Content.Headers, response.TrailingHeaders(), timestamp);
         }
 
