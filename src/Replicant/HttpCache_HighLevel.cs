@@ -72,16 +72,6 @@ namespace Replicant
             await result.ToFileAsync(path, token);
         }
 
-        public string String(
-            string uri,
-            bool staleIfError = false,
-            Action<HttpRequestMessage>? modifyRequest = null,
-            CancellationToken token = default)
-        {
-            using var result = Download(uri, staleIfError, modifyRequest, token);
-            return result.AsString();
-        }
-
         public async IAsyncEnumerable<string> LinesAsync(
             string uri,
             bool staleIfError = false,
@@ -98,41 +88,6 @@ namespace Replicant
             }
         }
 
-        public IEnumerable<string> Lines(
-            string uri,
-            bool staleIfError = false,
-            Action<HttpRequestMessage>? modifyRequest = null,
-            CancellationToken token = default)
-        {
-            using var result = Download(uri, staleIfError, modifyRequest, token);
-            using var stream = result.AsStream(token);
-            using var reader = new StreamReader(stream);
-            string? line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                yield return line;
-            }
-        }
-
-        public byte[] Bytes(
-            string uri,
-            bool staleIfError = false,
-            Action<HttpRequestMessage>? modifyRequest = null,
-            CancellationToken token = default)
-        {
-            using var result = Download(uri, staleIfError, modifyRequest, token);
-            return result.AsBytes();
-        }
-
-        public Stream Stream(
-            string uri,
-            bool staleIfError = false,
-            Action<HttpRequestMessage>? modifyRequest = null,
-            CancellationToken token = default)
-        {
-            var result = Download(uri, staleIfError, modifyRequest, token);
-            return result.AsStream();
-        }
 
         public async Task<HttpResponseMessage> Response(
             string uri,
@@ -144,26 +99,5 @@ namespace Replicant
             return result.AsResponseMessage();
         }
 
-        public void ToStream(
-            string uri,
-            Stream stream,
-            bool staleIfError = false,
-            Action<HttpRequestMessage>? modifyRequest = null,
-            CancellationToken token = default)
-        {
-            using var result = Download(uri, staleIfError, modifyRequest, token);
-            result.ToStream(stream, token);
-        }
-
-        public void ToFile(
-            string uri,
-            string path,
-            bool staleIfError = false,
-            Action<HttpRequestMessage>? modifyRequest = null,
-            CancellationToken token = default)
-        {
-            using var result = Download(uri, staleIfError, modifyRequest, token);
-            result.ToFile(path, token);
-        }
     }
 }

@@ -152,21 +152,6 @@ namespace Replicant
             return HandleFileExistsAsync(uri, staleIfError, modifyRequest, token, contentFile);
         }
 
-        internal Result Download(
-            string uri,
-            bool staleIfError = false,
-            Action<HttpRequestMessage>? modifyRequest = null,
-            CancellationToken token = default)
-        {
-            var contentFile = FindContentFileForUri(uri);
-
-            if (contentFile == null)
-            {
-                return HandleFileMissing(uri, modifyRequest, token);
-            }
-
-            return HandleFileExists(uri, staleIfError, modifyRequest, contentFile, token);
-        }
 
         FileInfo? FindContentFileForUri(string uri)
         {
@@ -232,82 +217,6 @@ namespace Replicant
             }
         }
 
-        Result HandleFileExists(
-            string uri,
-            bool staleIfError,
-            Action<HttpRequestMessage>? modifyRequest,
-            FileInfo contentFile,
-            CancellationToken token)
-        {
-            var now = DateTimeOffset.UtcNow;
-
-            var contentPath = contentFile.FullName;
-            var timestamp = Timestamp.FromPath(contentPath);
-            var metaFile = Path.ChangeExtension(contentPath, ".json");
-            if (timestamp.Expiry > now)
-            {
-                return new(contentPath, CacheStatus.Hit, metaFile);
-            }
-
-            using var request = BuildRequest(uri, modifyRequest);
-            timestamp.ApplyHeadersToRequest(request);
-
-            HttpResponseMessage? response;
-
-            var httpClient = GetClient();
-            try
-            {
-                response = httpClient.SendEx(request, token);
-            }
-            catch (Exception exception)
-            {
-                if (ShouldReturnStaleIfError(staleIfError, exception, token))
-                {
-                    return new(contentPath, CacheStatus.UseStaleDueToError, metaFile);
-                }
-
-                throw;
-            }
-
-            var status = DeriveCacheStatus.CacheStatus(response, staleIfError);
-            switch (status)
-            {
-                case CacheStatus.Hit:
-                case CacheStatus.UseStaleDueToError:
-                {
-                    response.Dispose();
-                    return new(contentPath, status, metaFile);
-                }
-                case CacheStatus.Stored:
-                case CacheStatus.Revalidate:
-                {
-                    using (response)
-                    {
-                        return AddItem(response, uri, status, token);
-                    }
-                }
-                case CacheStatus.NoStore:
-                {
-                    return new(response, CacheStatus.NoStore);
-                }
-                default:
-                {
-                    response.Dispose();
-                    throw new ArgumentOutOfRangeException();
-                }
-            }
-        }
-
-        static bool ShouldReturnStaleIfError(bool staleIfError, Exception exception, CancellationToken token)
-        {
-            return (
-                       exception is HttpRequestException ||
-                       exception is TaskCanceledException &&
-                       !token.IsCancellationRequested
-                   )
-                   && staleIfError;
-        }
-
         async Task<Result> HandleFileMissingAsync(
             string uri,
             Action<HttpRequestMessage>? modifyRequest,
@@ -328,26 +237,6 @@ namespace Replicant
             }
         }
 
-        Result HandleFileMissing(
-            string uri,
-            Action<HttpRequestMessage>? modifyRequest,
-            CancellationToken token)
-        {
-            var httpClient = GetClient();
-            using var request = BuildRequest(uri, modifyRequest);
-            var response = httpClient.SendEx(request, token);
-            response.EnsureSuccess();
-            if (response.IsNoCache())
-            {
-                return new(response, CacheStatus.NoStore);
-            }
-
-            using (response)
-            {
-                return AddItem(response, uri, CacheStatus.Stored, token);
-            }
-        }
-
         static HttpRequestMessage BuildRequest(string uri, Action<HttpRequestMessage>? modifyRequest)
         {
             HttpRequestMessage request = new(HttpMethod.Get, uri);
@@ -358,12 +247,6 @@ namespace Replicant
         HttpClient GetClient()
         {
             return client ?? clientFunc!();
-        }
-
-        public Task AddItemAsync(string uri, HttpResponseMessage response, CancellationToken token = default)
-        {
-            Guard.AgainstNull(response.Content, nameof(response.Content));
-            return AddItemAsync(response, uri, CacheStatus.Stored, token);
         }
 
         public async Task AddItemAsync(
@@ -536,7 +419,7 @@ namespace Replicant
             var metaFile = Path.Combine(directory, timestamp.MetaFileName);
 
             // if another thread has downloaded in parallel, then use those files
-            if (!File.Exists(contentFile))
+            //if (!File.Exists(contentFile))
             {
                 FileEx.Move(tempContentFile, contentFile);
                 FileEx.Move(tempMetaFile, metaFile);
