@@ -60,8 +60,9 @@ public class MatrixTests
         {
             await using var cache = new HttpCache(directory, new MockHttpClient(response));
             cache.Purge();
-            await cache.AddItemAsync("uri", "content", data.Expiry, data.Modified, data.Etag);
-            var result = await cache.DownloadAsync("uri", useStale);
+            var uri = Guid.NewGuid().ToString();
+            await cache.AddItemAsync(uri, "content", data.Expiry, data.Modified, data.Etag);
+            var result = await cache.DownloadAsync(uri, useStale);
             await Verifier.Verify(result, settings);
         }
         catch (HttpRequestException exception)
