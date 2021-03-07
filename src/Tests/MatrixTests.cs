@@ -70,10 +70,6 @@ public class MatrixTests
             var result = await cache.DownloadAsync(uri, useStale);
             await Verifier.Verify(result, settings);
         }
-        catch (HttpRequestException exception)
-        {
-            await Verifier.Verify(exception, settings);
-        }
         finally
         {
             Directory.Delete(directory, true);
