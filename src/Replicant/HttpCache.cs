@@ -200,19 +200,8 @@ namespace Replicant
             HttpResponseMessage? response;
 
             var httpClient = GetClient();
-            try
-            {
                 response = await httpClient.SendAsyncEx(request, token);
-            }
-            catch (Exception exception)
-            {
-                if (ShouldReturnStaleIfError(staleIfError, exception, token))
-                {
-                    return new(contentPath, CacheStatus.UseStaleDueToError, metaFile);
-                }
 
-                throw;
-            }
 
             var status = response.CacheStatus(staleIfError);
             switch (status)
