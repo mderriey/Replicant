@@ -55,7 +55,7 @@ public class MatrixTests
         var settings = new VerifySettings(sharedSettings);
         settings.UseFileName(fileName);
 
-        var directory = Path.Combine(Path.GetTempPath(), "HttpClientIntegrationTests" + Namer.Runtime);
+        var directory = Path.Combine(Path.GetTempPath(), $"HttpCacheTests{Namer.Runtime}{fileName}");
         try
         {
             await using var cache = new HttpCache(directory, new MockHttpClient(response));
