@@ -29,7 +29,7 @@ public class MatrixTests
 
     public static IEnumerable<object?[]> DataForIntegration()
     {
-        foreach (var staleIfError in new[] {true, false})
+        foreach (var staleIfError in new[] {false})
         foreach (var modDate in mods)
         foreach (var expiry in expiries)
         foreach (var etag in etagStrings)
