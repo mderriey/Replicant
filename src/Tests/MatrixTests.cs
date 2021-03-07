@@ -18,8 +18,8 @@ public class MatrixTests
     static DateTimeOffset now = new(2000, 1, 1, 0, 0, 0, TimeSpan.Zero);
     static DateTimeOffset inPast = now.AddDays(-1);
     static DateTimeOffset inFuture = now.AddDays(1);
-    static DateTimeOffset?[] expiries = {null, inFuture};
-    static DateTimeOffset?[] mods = {null, now, inPast};
+    static DateTimeOffset?[] expiries = {null};
+    static DateTimeOffset?[] mods = {null};
 
     static MatrixTests()
     {
@@ -111,26 +111,6 @@ public class MatrixTests
 
     static IEnumerable<HttpResponseMessageEx> Responses()
     {
-        yield return new(HttpStatusCode.BadRequest)
-        {
-            Content = new StringContent("")
-        };
-        foreach (var webEtag in etags)
-        foreach (var cacheControl in cacheControls)
-        {
-            HttpResponseMessageEx response = new(HttpStatusCode.NotModified)
-            {
-                Content = new StringContent("")
-            };
-            if (!webEtag.IsEmpty)
-            {
-                response.Headers.TryAddWithoutValidation("ETag", webEtag.ForWeb);
-            }
-
-            response.Headers.CacheControl = cacheControl;
-            yield return response;
-        }
-
         foreach (var webExpiry in expiries)
         {
             foreach (var webMod in mods)
@@ -157,35 +137,18 @@ public class MatrixTests
     static Etag[] etags =
     {
         new("\"tag\"", "Stag", false),
-        Etag.Empty,
     };
 
     static string?[] etagStrings =
     {
-        "\"tag\"",
-        "W/\"tag\"",
-        null
+        "\"tag\""
     };
 
     static CacheControlHeaderValue[] cacheControls =
     {
         new()
         {
-            Public = true,
-            MaxAge = TimeSpan.FromDays(1)
-        },
-        new()
-        {
-            Private = true,
-            MaxAge = TimeSpan.FromDays(1)
-        },
-        new()
-        {
             NoCache = true,
-        },
-        new()
-        {
-            NoStore = true,
         }
     };
 }
