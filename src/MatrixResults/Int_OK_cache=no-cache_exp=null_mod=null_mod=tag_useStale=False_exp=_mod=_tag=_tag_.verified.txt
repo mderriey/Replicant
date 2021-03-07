@@ -1,4 +1,5 @@
 Status: Revalidate,
+Meta: {"ResponseHeaders":[{"Key":"ETag","Value":["\u0022tag\u0022"]},{"Key":"Cache-Control","Value":["no-cache"]}],"ContentHeaders":[{"Key":"Content-Type","Value":["text/plain; charset=utf-8"]}],"TrailingHeaders":[]},
 Response: {
   Version: 1.1,
   Content: {
