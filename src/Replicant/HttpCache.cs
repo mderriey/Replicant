@@ -465,6 +465,8 @@ namespace Replicant
             IEnumerable<KeyValuePair<string, IEnumerable<string>>> trailingHeaders,
             Timestamp timestamp)
         {
+            MetaData meta = new(httpResponseHeaders, contentHeaders, trailingHeaders);
+
             var tempContentFile = FileEx.GetTempFileName();
             var tempMetaFile = FileEx.GetTempFileName();
             try
@@ -480,7 +482,6 @@ namespace Replicant
                 using (var metaFileStream = FileEx.OpenWrite(tempMetaFile))
                 {
 #endif
-                    MetaData meta = new(httpResponseHeaders, contentHeaders, trailingHeaders);
                     await JsonSerializer.SerializeAsync(metaFileStream, meta, cancellationToken: token);
                     await httpStream.CopyToAsync(contentFileStream, token);
                 }
