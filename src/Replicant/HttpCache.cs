@@ -465,8 +465,6 @@ namespace Replicant
             IEnumerable<KeyValuePair<string, IEnumerable<string>>> trailingHeaders,
             Timestamp timestamp)
         {
-            MetaData meta = new(httpResponseHeaders, contentHeaders, trailingHeaders);
-
             var tempContentFile = FileEx.GetTempFileName();
             var tempMetaFile = FileEx.GetTempFileName();
             var meta = MetaData.FromEnumerables(httpResponseHeaders, contentHeaders, trailingHeaders);
