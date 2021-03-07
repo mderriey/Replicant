@@ -439,7 +439,7 @@ namespace Replicant
                     modified.Value.ToUniversalTime().ToString("r"));
             }
 
-            return AddItemAsync(CacheStatus.Stored, token, _ => Task.FromResult(stream), responseHeaders, contentHeaders, trailingHeaders, timestamp);
+            return InnerAddItemAsync(CacheStatus.Stored, token, _ => Task.FromResult(stream), responseHeaders, contentHeaders, trailingHeaders, timestamp);
         }
 
         public void AddItem(string uri, HttpResponseMessage response, CancellationToken token = default)
@@ -453,10 +453,10 @@ namespace Replicant
             var timestamp = Timestamp.FromResponse(uri, response);
             Task<Stream> ContentFunc(CancellationToken cancellationToken) => response.Content.ReadAsStreamAsync(cancellationToken);
 
-            return AddItemAsync(status, token, ContentFunc, response.Headers, response.Content.Headers, response.TrailingHeaders(), timestamp);
+            return InnerAddItemAsync(status, token, ContentFunc, response.Headers, response.Content.Headers, response.TrailingHeaders(), timestamp);
         }
 
-        async Task<Result> AddItemAsync(
+        async Task<Result> InnerAddItemAsync(
             CacheStatus status,
             CancellationToken token,
             Func<CancellationToken, Task<Stream>> httpContentFunc,
@@ -469,6 +469,7 @@ namespace Replicant
 
             var tempContentFile = FileEx.GetTempFileName();
             var tempMetaFile = FileEx.GetTempFileName();
+            var meta = MetaData.FromEnumerables(httpResponseHeaders, contentHeaders, trailingHeaders);
             try
             {
 #if NET5_0
@@ -499,6 +500,12 @@ namespace Replicant
         {
             var timestamp = Timestamp.FromResponse(uri, response);
 
+#if NET5_0
+            var meta = MetaData.FromEnumerables(response.Headers, response.Content.Headers, response.TrailingHeaders);
+#else
+            var meta = MetaData.FromEnumerables(response.Headers, response.Content.Headers);
+#endif
+
             var tempContentFile = FileEx.GetTempFileName();
             var tempMetaFile = FileEx.GetTempFileName();
             try
@@ -508,11 +515,6 @@ namespace Replicant
                 using (var metaFileStream = FileEx.OpenWrite(tempMetaFile))
                 using (var writer = new Utf8JsonWriter(metaFileStream))
                 {
-#if NET5_0
-                    MetaData meta = new(response.Headers, response.Content.Headers, response.TrailingHeaders);
-#else
-                    MetaData meta = new(response.Headers, response.Content.Headers);
-#endif
                     JsonSerializer.Serialize(writer, meta);
                     httpStream.CopyTo(contentFileStream);
                 }
