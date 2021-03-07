@@ -462,18 +462,21 @@ namespace Replicant
             var meta = MetaData.FromEnumerables(httpResponseHeaders, contentHeaders, trailingHeaders);
             try
             {
+                using (var metaFileStream = FileEx.OpenWrite(tempMetaFile))
+                {
+                    await JsonSerializer.SerializeAsync(metaFileStream, meta, cancellationToken: token);
+                    metaFileStream.Flush();
+                }
+
 #if NET5_0
                 await using var httpStream = await httpContentFunc(token);
                 await using (var contentFileStream = FileEx.OpenWrite(tempContentFile))
-                await using (var metaFileStream = FileEx.OpenWrite(tempMetaFile))
                 {
 #else
                 using var httpStream = await httpContentFunc(token);
                 using (var contentFileStream = FileEx.OpenWrite(tempContentFile))
-                using (var metaFileStream = FileEx.OpenWrite(tempMetaFile))
                 {
 #endif
-                    await JsonSerializer.SerializeAsync(metaFileStream, meta, cancellationToken: token);
                     await httpStream.CopyToAsync(contentFileStream, token);
                 }
 
